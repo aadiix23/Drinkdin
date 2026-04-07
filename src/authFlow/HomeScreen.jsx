@@ -1,11 +1,11 @@
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  SafeAreaView, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
   TouchableOpacity,
-  StatusBar
+  StatusBar,
 } from 'react-native';
 
 const HomeScreen = ({ navigation }) => {
@@ -15,12 +15,12 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.content}>
         <Text style={styles.title}>Welcome to Drinkdin</Text>
         <Text style={styles.subtitle}>Your Social Pulse is active.</Text>
-        
+
         <View style={styles.placeholderCard}>
           <Text style={styles.placeholderText}>This is your feed. Stay tuned!</Text>
         </View>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.button}
           onPress={() => navigation.goBack()}
         >
