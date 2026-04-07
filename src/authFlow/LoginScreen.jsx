@@ -126,6 +126,14 @@ const LoginScreen = ({ navigation }) => {
               >
                 <Text style={styles.secondaryButtonText}>I have an account</Text>
               </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.joinNowRow}
+                onPress={() => navigation.navigate('Home')}
+              >
+                <Text style={styles.joinNowLabel}>New to Drinkdin?</Text>
+                <Text style={styles.joinNowAction}>JOIN Now</Text>
+              </TouchableOpacity>
             </View>
 
             {/* Footer - Vertical "Rhythm" */}
@@ -243,6 +251,25 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 18,
     fontFamily: 'Outfit_700Bold',
+  },
+  joinNowRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    paddingTop: 6,
+  },
+  joinNowLabel: {
+    color: 'rgba(255, 255, 255, 0.72)',
+    fontSize: 15,
+    fontFamily: 'Outfit_400Regular',
+  },
+  joinNowAction: {
+    color: '#e08dff',
+    fontSize: 15,
+    fontFamily: 'Outfit_800ExtraBold',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
   footer: {
     alignItems: 'center',
