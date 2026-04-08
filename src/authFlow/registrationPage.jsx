@@ -109,7 +109,11 @@ const RegistrationPage = ({ navigation }) => {
 
               <TouchableOpacity
                 style={styles.primaryButton}
-                onPress={() => navigation.navigate('Home')}
+                onPress={() =>
+                  navigation.navigate('OtpVerification', {
+                    email: form.email,
+                  })
+                }
               >
                 <Text style={styles.primaryButtonText}>Create Account</Text>
               </TouchableOpacity>

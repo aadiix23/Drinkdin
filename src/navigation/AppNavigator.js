@@ -4,6 +4,7 @@ import MainAuthScreen from '../authFlow/MainAuthScreen';
 import HomeScreen from '../authFlow/HomeScreen';
 import LoginScreen from '../authFlow/loginScreen';
 import RegistrationPage from '../authFlow/registrationPage';
+import OtpVerificationScreen from '../authFlow/OtpVerificationScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -28,6 +29,11 @@ const AppNavigator = () => {
       <Stack.Screen
         name="Registration"
         component={RegistrationPage}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="OtpVerification"
+        component={OtpVerificationScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
