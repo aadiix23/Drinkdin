@@ -8,9 +8,12 @@ import {
   Platform,
   TextInput,
   SafeAreaView,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import AuthScreenShell from './components/AuthScreenShell';
+import { loginUser } from '../../service/authservice';
 
 const LoginScreen = ({ navigation }) => {
   const [credentials, setCredentials] = useState({
@@ -18,12 +21,52 @@ const LoginScreen = ({ navigation }) => {
     password: '',
   });
   const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const updateField = (field, value) => {
     setCredentials((current) => ({
       ...current,
       [field]: value,
     }));
+    setError(null); 
+  };
+
+  const handleLogin = async () => {
+    setError(null);
+
+    // Validation
+    if (!credentials.email.trim()) {
+      setError('Email is required');
+      return;
+    }
+    if (!credentials.password.trim()) {
+      setError('Password is required');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await loginUser({
+        email: credentials.email,
+        password: credentials.password,
+      });
+
+    
+      navigation.navigate('Home');
+      Alert.alert('Success', 'Login successful!');
+    } catch (err) {
+      console.error('Login error:', err);
+      const errorMessage =
+        typeof err === 'string'
+          ? err
+          : err?.message || err?.error || 'Login failed. Please try again.';
+
+      setError(errorMessage);
+      Alert.alert('Login Error', errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -76,9 +119,15 @@ const LoginScreen = ({ navigation }) => {
 
               <TouchableOpacity
                 style={styles.primaryButton}
-                onPress={() => navigation.navigate('Home')}
+                onPress={handleLogin}
+                activeOpacity={0.85}
+                disabled={loading}
               >
-                <Text style={styles.primaryButtonText}>Log In</Text>
+                {loading ? (
+                  <ActivityIndicator color="#4f006c" />
+                ) : (
+                  <Text style={styles.primaryButtonText}>Log In</Text>
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity

@@ -8,25 +8,101 @@ import {
   Platform,
   TextInput,
   SafeAreaView,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import AuthScreenShell from './components/AuthScreenShell';
+import { registerUser } from '../../service/authservice';
 
 const RegistrationPage = ({ navigation }) => {
   const [form, setForm] = useState({
-    name: '',
+    fullname: '',
+    username: '',
     age: '',
     email: '',
     password: '',
   });
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isOfLegalAge, setIsOfLegalAge] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const updateField = (field, value) => {
     setForm((current) => ({
       ...current,
       [field]: value,
     }));
+    setError(null); // Clear error when user starts typing
+  };
+
+  const handleRegister = async () => {
+    setError(null);
+
+    // Validation
+    if (!form.fullname.trim()) {
+      setError('Full name is required');
+      return;
+    }
+    if (!form.username.trim()) {
+      setError('Username is required');
+      return;
+    }
+    if (!form.age.trim()) {
+      setError('Age is required');
+      return;
+    }
+    if (parseInt(form.age) < 21) {
+      setError('You must be 21 years or older');
+      return;
+    }
+    if (!form.email.trim()) {
+      setError('Email is required');
+      return;
+    }
+    if (!form.password.trim()) {
+      setError('Password is required');
+      return;
+    }
+    if (!acceptedTerms) {
+      setError('You must accept the terms and privacy policy');
+      return;
+    }
+    if (!isOfLegalAge) {
+      setError('You must confirm you are 21 years or above');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const userData = {
+        fullname: form.fullname,
+        username: form.username,
+        age: parseInt(form.age),
+        email: form.email,
+        password: form.password,
+      };
+
+      await registerUser(userData);
+      
+      // Success - navigate to OTP verification
+      navigation.navigate('OtpVerification', {
+        email: form.email,
+      });
+      
+      Alert.alert('Success', 'Registration successful! Please verify your email.');
+    } catch (err) {
+      console.error('Registration error:', err);
+      const errorMessage =
+        typeof err === 'string'
+          ? err
+          : err?.message || err?.error || 'Registration failed. Please try again.';
+
+      setError(errorMessage);
+      Alert.alert('Registration Error', errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,10 +124,19 @@ const RegistrationPage = ({ navigation }) => {
               <Text style={styles.formTitle}>Basic Details</Text>
 
               <TextInput
-                value={form.name}
-                onChangeText={(value) => updateField('name', value)}
+                value={form.fullname}
+                onChangeText={(value) => updateField('fullname', value)}
                 placeholder="Full name"
                 placeholderTextColor="rgba(255, 255, 255, 0.38)"
+                style={styles.input}
+              />
+
+              <TextInput
+                value={form.username}
+                onChangeText={(value) => updateField('username', value)}
+                placeholder="Username"
+                placeholderTextColor="rgba(255, 255, 255, 0.38)"
+                autoCapitalize="none"
                 style={styles.input}
               />
 
@@ -107,15 +192,18 @@ const RegistrationPage = ({ navigation }) => {
                 </TouchableOpacity>
               </View>
 
+              {error && <Text style={styles.errorText}>{error}</Text>}
+
               <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={() =>
-                  navigation.navigate('OtpVerification', {
-                    email: form.email,
-                  })
-                }
+                style={[styles.primaryButton, loading && styles.primaryButtonDisabled]}
+                onPress={handleRegister}
+                disabled={loading}
               >
-                <Text style={styles.primaryButtonText}>Create Account</Text>
+                {loading ? (
+                  <ActivityIndicator color="#4f006c" size="small" />
+                ) : (
+                  <Text style={styles.primaryButtonText}>Create Account</Text>
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -254,7 +342,15 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontFamily: 'Outfit_700Bold',
+  },  errorText: {
+    color: '#ff6b6b',
+    fontSize: 12,
+    fontFamily: 'Outfit_500Medium',
+    marginBottom: 10,
+    paddingHorizontal: 5,
   },
-});
+  primaryButtonDisabled: {
+    opacity: 0.6,
+  },});
 
 export default RegistrationPage;
