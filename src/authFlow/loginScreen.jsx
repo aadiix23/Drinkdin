@@ -10,6 +10,7 @@ import {
   SafeAreaView,
   Alert,
   ActivityIndicator,
+  ScrollView, // ✅ added
 } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import AuthScreenShell from './components/AuthScreenShell';
@@ -29,13 +30,12 @@ const LoginScreen = ({ navigation }) => {
       ...current,
       [field]: value,
     }));
-    setError(null); 
+    setError(null);
   };
 
   const handleLogin = async () => {
     setError(null);
 
-    // Validation
     if (!credentials.email.trim()) {
       setError('Email is required');
       return;
@@ -52,7 +52,6 @@ const LoginScreen = ({ navigation }) => {
         password: credentials.password,
       });
 
-    
       navigation.navigate('Home');
       Alert.alert('Success', 'Login successful!');
     } catch (err) {
@@ -73,71 +72,76 @@ const LoginScreen = ({ navigation }) => {
     <AuthScreenShell>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} // ✅ fixed
       >
         <SafeAreaView style={styles.safeContent}>
-          <View style={styles.content}>
-            <View style={styles.headingContainer}>
-              <Text style={styles.eyebrow}>WELCOME BACK</Text>
-              <Text style={styles.headline}>Pick up the</Text>
-              <Text style={styles.headline}>night where</Text>
-              <Text style={styles.headline}>you left it.</Text>
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1 }} // ✅ important
+            keyboardShouldPersistTaps="handled" // ✅ fix taps
+          >
+            <View style={styles.content}>
+              <View style={styles.headingContainer}>
+                <Text style={styles.eyebrow}>WELCOME BACK</Text>
+                <Text style={styles.headline}>Pick up the</Text>
+                <Text style={styles.headline}>night where</Text>
+                <Text style={styles.headline}>you left it.</Text>
+              </View>
+
+              <View style={styles.formCard}>
+                <Text style={styles.formTitle}>Login</Text>
+
+                <TextInput
+                  value={credentials.email}
+                  onChangeText={(value) => updateField('email', value)}
+                  placeholder="Email address"
+                  placeholderTextColor="rgba(255, 255, 255, 0.38)"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  style={styles.input}
+                />
+
+                <TextInput
+                  value={credentials.password}
+                  onChangeText={(value) => updateField('password', value)}
+                  placeholder="Password"
+                  placeholderTextColor="rgba(255, 255, 255, 0.38)"
+                  secureTextEntry
+                  style={styles.input}
+                />
+
+                <TouchableOpacity
+                  style={styles.checkboxRow}
+                  onPress={() => setRememberMe((current) => !current)}
+                  activeOpacity={0.85}
+                >
+                  <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+                    {rememberMe ? <AntDesign name="check" size={12} color="#4f006c" /> : null}
+                  </View>
+                  <Text style={styles.checkboxText}>Keep me signed in</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.primaryButton}
+                  onPress={handleLogin}
+                  activeOpacity={0.85}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#4f006c" />
+                  ) : (
+                    <Text style={styles.primaryButtonText}>Log In</Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.secondaryButton}
+                  onPress={() => navigation.navigate('MainAuth')}
+                >
+                  <Text style={styles.secondaryButtonText}>Back to main auth</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-
-            <View style={styles.formCard}>
-              <Text style={styles.formTitle}>Login</Text>
-
-              <TextInput
-                value={credentials.email}
-                onChangeText={(value) => updateField('email', value)}
-                placeholder="Email address"
-                placeholderTextColor="rgba(255, 255, 255, 0.38)"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                style={styles.input}
-              />
-
-              <TextInput
-                value={credentials.password}
-                onChangeText={(value) => updateField('password', value)}
-                placeholder="Password"
-                placeholderTextColor="rgba(255, 255, 255, 0.38)"
-                secureTextEntry
-                style={styles.input}
-              />
-
-              <TouchableOpacity
-                style={styles.checkboxRow}
-                onPress={() => setRememberMe((current) => !current)}
-                activeOpacity={0.85}
-              >
-                <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-                  {rememberMe ? <AntDesign name="check" size={12} color="#4f006c" /> : null}
-                </View>
-                <Text style={styles.checkboxText}>Keep me signed in</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={handleLogin}
-                activeOpacity={0.85}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#4f006c" />
-                ) : (
-                  <Text style={styles.primaryButtonText}>Log In</Text>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={() => navigation.navigate('MainAuth')}
-              >
-                <Text style={styles.secondaryButtonText}>Back to main auth</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          </ScrollView>
         </SafeAreaView>
       </KeyboardAvoidingView>
     </AuthScreenShell>
@@ -153,7 +157,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-end', // you can change to 'center' if needed
     paddingHorizontal: 24,
     paddingTop: 34,
     paddingBottom: 24,

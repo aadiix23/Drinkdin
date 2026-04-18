@@ -1,3 +1,4 @@
+import { ScrollView } from 'react-native';
 import React, { useState } from 'react';
 import {
   View,
@@ -109,10 +110,13 @@ const RegistrationPage = ({ navigation }) => {
     <AuthScreenShell>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <SafeAreaView style={styles.safeContent}>
-          <View style={styles.content}>
+behavior={Platform.OS === 'ios' ? 'padding' : 'height'}      >
+    <SafeAreaView style={styles.safeContent}>
+     <ScrollView
+       contentContainerStyle={{ flexGrow: 1 }}
+       keyboardShouldPersistTaps="handled"
+  >
+    <View style={styles.content}>
             <View style={styles.headingContainer}>
               <Text style={styles.eyebrow}>JOIN THE SCENE</Text>
               <Text style={styles.headline}>Set up your</Text>
@@ -213,8 +217,9 @@ const RegistrationPage = ({ navigation }) => {
                 <Text style={styles.secondaryButtonText}>I have an account</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </SafeAreaView>
+         </View>
+</ScrollView>
+</SafeAreaView>
       </KeyboardAvoidingView>
     </AuthScreenShell>
   );
