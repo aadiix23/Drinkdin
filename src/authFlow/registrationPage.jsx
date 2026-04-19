@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import AuthScreenShell from './components/AuthScreenShell';
-import { registerUser } from '../../service/authservice';
+import { authApi, setAuthToken } from '../services/api';
 
 const RegistrationPage = ({ navigation }) => {
   const [form, setForm] = useState({
@@ -84,14 +84,15 @@ const RegistrationPage = ({ navigation }) => {
         password: form.password,
       };
 
-      await registerUser(userData);
+      const response = await authApi.register(userData);
       
-      // Success - navigate to OTP verification
-      navigation.navigate('OtpVerification', {
-        email: form.email,
-      });
+      // Success - navigate to Home (backend returns token directly)
+      if (response.data.token) {
+        await setAuthToken(response.data.token);
+      }
       
-      Alert.alert('Success', 'Registration successful! Please verify your email.');
+      Alert.alert('Success', 'Registration successful!');
+      navigation.navigate('Home');
     } catch (err) {
       console.error('Registration error:', err);
       const errorMessage =

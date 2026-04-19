@@ -5,6 +5,9 @@ import HomeScreen from '../authFlow/HomeScreen';
 import LoginScreen from '../authFlow/loginScreen';
 import RegistrationPage from '../authFlow/registrationPage';
 import OtpVerificationScreen from '../authFlow/OtpVerificationScreen';
+import NetworkScreen from '../networkFlow/NetworkScreen';
+import CreatePostScreen from '../postFlow/CreatePostScreen';
+import LeaderboardScreen from '../leaderboardFlow/LeaderboardScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -35,6 +38,21 @@ const AppNavigator = () => {
         name="OtpVerification"
         component={OtpVerificationScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="MyNetwork" 
+        component={NetworkScreen} 
+        options={{ headerShown: false }} 
+      />
+      <Stack.Screen 
+        name="CreatePost" 
+        component={CreatePostScreen} 
+        options={{ headerShown: false }} 
+      />
+      <Stack.Screen 
+        name="Leaderboard" 
+        component={LeaderboardScreen} 
+        options={{ headerShown: false }} 
       />
     </Stack.Navigator>
   );

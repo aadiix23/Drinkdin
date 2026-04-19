@@ -14,12 +14,12 @@ import {
 } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import AuthScreenShell from './components/AuthScreenShell';
-import { loginUser } from '../../service/authservice';
+import { authApi, setAuthToken } from '../services/api';
 
 const LoginScreen = ({ navigation }) => {
   const [credentials, setCredentials] = useState({
-    email: '',
-    password: '',
+    email: 'alokm@gmail.com',
+    password: 'qwerty',
   });
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -47,11 +47,11 @@ const LoginScreen = ({ navigation }) => {
 
     try {
       setLoading(true);
-      await loginUser({
-        email: credentials.email,
-        password: credentials.password,
-      });
-
+      const response = await authApi.login(credentials.email, credentials.password);
+      
+      if (response.data.token) {
+        await setAuthToken(response.data.token);
+      }
       navigation.navigate('Home');
       Alert.alert('Success', 'Login successful!');
     } catch (err) {
@@ -59,7 +59,7 @@ const LoginScreen = ({ navigation }) => {
       const errorMessage =
         typeof err === 'string'
           ? err
-          : err?.message || err?.error || 'Login failed. Please try again.';
+          : err?.response?.data?.message || err?.error || err?.message || 'Login failed. Please try again.';
 
       setError(errorMessage);
       Alert.alert('Login Error', errorMessage);

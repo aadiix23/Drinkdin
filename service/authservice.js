@@ -1,10 +1,9 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://nondomestically-supersubtle-taisha.ngrok-free.dev/", //
+  baseURL: "http://10.0.2.2:5001",
 });
 
-// Register API
 export const registerUser = async (userData) => {
   try {
     const res = await API.post("/auth/register", userData);
@@ -14,7 +13,6 @@ export const registerUser = async (userData) => {
   }
 };
 
-// Login API
 export const loginUser = async (credentials) => {
   try {
     const res = await API.post("/auth/login", credentials);

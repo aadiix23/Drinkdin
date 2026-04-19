@@ -25,6 +25,7 @@ const MainAuthScreen = ({ navigation }) => {
           <TouchableOpacity
             style={styles.primaryButton}
             onPress={() => navigation.navigate('Home')}
+            activeOpacity={0.85}
           >
             <View style={styles.buttonContent}>
               <AntDesign name="google" size={24} color="#4f006c" style={styles.buttonIcon} />
