@@ -4,6 +4,7 @@ import feedReducer from './slices/feedSlice';
 import postReducer from './slices/postSlice';
 import followReducer from './slices/followSlice';
 import leaderboardReducer from './slices/leaderboardSlice';
+import commentReducer from './slices/commentSlice';
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     post: postReducer,
     follow: followReducer,
     leaderboard: leaderboardReducer,
+    comments: commentReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

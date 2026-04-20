@@ -32,7 +32,7 @@ const renderNavIcon = (item) => {
 const NetworkScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const { connections, following, isLoading, error } = useSelector((state) => state.follow);
+  const { connections, following, followers, followingIds, isLoading, error } = useSelector((state) => state.follow);
 
   useEffect(() => {
     dispatch(fetchNetwork());
@@ -50,7 +50,7 @@ const NetworkScreen = () => {
     }
   };
 
-  const isFollowing = (userId) => following.includes(userId);
+  const isFollowing = (userId) => followingIds.includes(userId);
 
   return (
     <View style={styles.screen}>
@@ -73,12 +73,7 @@ const NetworkScreen = () => {
 
         <View style={styles.statsBar}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{connections.length}</Text>
-            <Text style={styles.statLabel}>Connections</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{following.length}</Text>
+            <Text style={styles.statNumber}>{followers.length}</Text>
             <Text style={styles.statLabel}>Followers</Text>
           </View>
           <View style={styles.statDivider} />

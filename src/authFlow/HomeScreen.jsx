@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,13 +6,16 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  TextInput,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign, Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchFeed } from '../store/slices/feedSlice';
+import { addComment, fetchComments } from '../store/slices/commentSlice';
+import { fetchFeed, toggleFeedLike } from '../store/slices/feedSlice';
 
 const navItems = [
   { key: 'home', label: 'Home', icon: 'home', active: true, family: 'AntDesign', screen: 'Home' },
@@ -33,6 +36,9 @@ const HomeScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { posts, isLoading, error } = useSelector((state) => state.feed);
+  const { byPostId, isLoadingByPostId, isSubmittingByPostId } = useSelector((state) => state.comments);
+  const [expandedComments, setExpandedComments] = useState({});
+  const [commentInputs, setCommentInputs] = useState({});
 
   useEffect(() => {
     dispatch(fetchFeed());
@@ -46,8 +52,61 @@ const HomeScreen = () => {
     }
   };
 
+  const handleLikeToggle = async (post) => {
+    try {
+      await dispatch(toggleFeedLike({ postId: post._id, likedByMe: post.likedByMe })).unwrap();
+    } catch (err) {
+      Alert.alert('Like Error', err || 'Failed to update like');
+    }
+  };
+
+  const handleToggleComments = (postId) => {
+    const isExpanded = Boolean(expandedComments[postId]);
+    setExpandedComments((current) => ({
+      ...current,
+      [postId]: !isExpanded,
+    }));
+
+    if (!isExpanded && !byPostId[postId]) {
+      dispatch(fetchComments(postId));
+    }
+  };
+
+  const handleCommentInputChange = (postId, value) => {
+    setCommentInputs((current) => ({
+      ...current,
+      [postId]: value,
+    }));
+  };
+
+  const handleAddComment = async (postId) => {
+    const text = commentInputs[postId]?.trim();
+    if (!text) {
+      Alert.alert('Comment Error', 'Please write a comment first.');
+      return;
+    }
+
+    try {
+      await dispatch(addComment({ postId, text })).unwrap();
+      setCommentInputs((current) => ({
+        ...current,
+        [postId]: '',
+      }));
+      dispatch(fetchFeed());
+    } catch (err) {
+      Alert.alert('Comment Error', err || 'Failed to add comment');
+    }
+  };
+
   const renderPost = (post, isFirst = false) => {
     if (!post) return null;
+
+    const comments = byPostId[post._id] || [];
+    const isCommentsOpen = Boolean(expandedComments[post._id]);
+    const isCommentsLoading = Boolean(isLoadingByPostId[post._id]);
+    const isSubmittingComment = Boolean(isSubmittingByPostId[post._id]);
+    const commentCount = comments.length > 0 ? comments.length : post.commentCount || 0;
+
     return (
       <View key={post._id || post.id} style={styles.postContainer}>
         <LinearGradient
@@ -82,16 +141,31 @@ const HomeScreen = () => {
           <Text style={styles.postCopy}>{post.content || ''}</Text>
           <View style={styles.reactionRow}>
             <View style={styles.reactionBadge}>
-              <AntDesign name="like1" size={14} color="#4f006c" />
+              <MaterialCommunityIcons name="bottle-wine" size={14} color="#4f006c" />
             </View>
             <Text style={styles.reactionCount}>{post.likes?.length || 0}</Text>
+            <Text style={styles.reactionMeta}>• {commentCount} comments</Text>
           </View>
           <View style={styles.actionBar}>
-            <TouchableOpacity style={styles.actionItem} activeOpacity={0.85}>
-              <AntDesign name="like2" size={21} color="#ffffff" />
-              <Text style={styles.actionLabel}>Like</Text>
+            <TouchableOpacity
+              style={styles.actionItem}
+              activeOpacity={0.85}
+              onPress={() => handleLikeToggle(post)}
+            >
+              <MaterialCommunityIcons
+                name={post.likedByMe ? 'glass-cocktail' : 'bottle-wine-outline'}
+                size={21}
+                color={post.likedByMe ? '#e08dff' : '#ffffff'}
+              />
+              <Text style={[styles.actionLabel, post.likedByMe && styles.actionLabelActive]}>
+                {post.likedByMe ? 'Toasted' : 'Toast'}
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionItem} activeOpacity={0.85}>
+            <TouchableOpacity
+              style={styles.actionItem}
+              activeOpacity={0.85}
+              onPress={() => handleToggleComments(post._id)}
+            >
               <Feather name="message-circle" size={21} color="#ffffff" />
               <Text style={styles.actionLabel}>Comment</Text>
             </TouchableOpacity>
@@ -104,6 +178,56 @@ const HomeScreen = () => {
               <Text style={styles.actionLabel}>Send</Text>
             </TouchableOpacity>
           </View>
+          {isCommentsOpen ? (
+            <View style={styles.commentsSection}>
+              {isCommentsLoading ? (
+                <View style={styles.commentsLoading}>
+                  <ActivityIndicator size="small" color="#e08dff" />
+                </View>
+              ) : comments.length > 0 ? (
+                comments.map((comment) => (
+                  <View key={comment._id} style={styles.commentCard}>
+                    <View style={styles.commentAvatar}>
+                      <Text style={styles.commentAvatarText}>
+                        {comment.user?.fullname?.charAt(0) || 'U'}
+                      </Text>
+                    </View>
+                    <View style={styles.commentContent}>
+                      <Text style={styles.commentAuthor}>
+                        {comment.user?.fullname || 'User'}
+                      </Text>
+                      <Text style={styles.commentText}>{comment.text}</Text>
+                    </View>
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.noCommentsText}>No comments yet. Be the first to reply.</Text>
+              )}
+
+              <View style={styles.commentComposer}>
+                <TextInput
+                  style={styles.commentInput}
+                  placeholder="Write a comment..."
+                  placeholderTextColor="rgba(255, 255, 255, 0.38)"
+                  value={commentInputs[post._id] || ''}
+                  onChangeText={(value) => handleCommentInputChange(post._id, value)}
+                />
+                <TouchableOpacity
+                  style={[
+                    styles.commentSendButton,
+                    (!commentInputs[post._id]?.trim() || isSubmittingComment) && styles.commentSendButtonDisabled,
+                  ]}
+                  activeOpacity={0.85}
+                  onPress={() => handleAddComment(post._id)}
+                  disabled={!commentInputs[post._id]?.trim() || isSubmittingComment}
+                >
+                  <Text style={styles.commentSendText}>
+                    {isSubmittingComment ? '...' : 'Send'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : null}
         </LinearGradient>
       </View>
     );
@@ -373,6 +497,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Outfit_400Regular',
   },
+  reactionMeta: {
+    marginLeft: 8,
+    color: 'rgba(255, 255, 255, 0.56)',
+    fontSize: 13,
+    fontFamily: 'Outfit_400Regular',
+  },
   actionBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -390,6 +520,99 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 13,
     fontFamily: 'Outfit_400Regular',
+  },
+  actionLabelActive: {
+    color: '#e08dff',
+    fontFamily: 'Outfit_700Bold',
+  },
+  commentsSection: {
+    marginTop: 14,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  commentsLoading: {
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  commentCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  commentAvatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  commentAvatarText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontFamily: 'Outfit_700Bold',
+  },
+  commentContent: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  commentAuthor: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontFamily: 'Outfit_700Bold',
+    marginBottom: 2,
+  },
+  commentText: {
+    color: 'rgba(255, 255, 255, 0.82)',
+    fontSize: 14,
+    lineHeight: 20,
+    fontFamily: 'Outfit_400Regular',
+  },
+  noCommentsText: {
+    color: 'rgba(255, 255, 255, 0.56)',
+    fontSize: 13,
+    fontFamily: 'Outfit_400Regular',
+    marginBottom: 12,
+  },
+  commentComposer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  commentInput: {
+    flex: 1,
+    minHeight: 46,
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    color: '#ffffff',
+    fontSize: 14,
+    fontFamily: 'Outfit_400Regular',
+  },
+  commentSendButton: {
+    marginLeft: 10,
+    minWidth: 62,
+    height: 44,
+    borderRadius: 16,
+    backgroundColor: '#e08dff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+  },
+  commentSendButtonDisabled: {
+    opacity: 0.45,
+  },
+  commentSendText: {
+    color: '#23002f',
+    fontSize: 14,
+    fontFamily: 'Outfit_700Bold',
   },
   emptyFeed: {
     padding: 40,

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { feedApi } from '../../services/api';
+import { feedApi, postApi } from '../../services/api';
 
 const initialState = {
   posts: [],
@@ -15,6 +15,25 @@ export const fetchFeed = createAsyncThunk('feed/fetchFeed', async (_, { rejectWi
     return rejectWithValue(error.response?.data?.message || 'Failed to fetch feed');
   }
 });
+
+export const toggleFeedLike = createAsyncThunk(
+  'feed/toggleFeedLike',
+  async ({ postId, likedByMe }, { rejectWithValue }) => {
+    try {
+      const response = likedByMe
+        ? await postApi.unlikePost(postId)
+        : await postApi.likePost(postId);
+
+      return {
+        postId,
+        post: response.data?.post,
+        likedByMe: !likedByMe,
+      };
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update like');
+    }
+  }
+);
 
 const feedSlice = createSlice({
   name: 'feed',
@@ -36,6 +55,17 @@ const feedSlice = createSlice({
       })
       .addCase(fetchFeed.rejected, (state, action) => {
         state.isLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(toggleFeedLike.fulfilled, (state, action) => {
+        const { postId, post, likedByMe } = action.payload;
+        const targetPost = state.posts.find((item) => item._id === postId);
+        if (targetPost) {
+          targetPost.likes = Array.isArray(post?.likes) ? post.likes : targetPost.likes;
+          targetPost.likedByMe = likedByMe;
+        }
+      })
+      .addCase(toggleFeedLike.rejected, (state, action) => {
         state.error = action.payload;
       });
   },

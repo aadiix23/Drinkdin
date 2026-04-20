@@ -13,10 +13,13 @@ import {
   ScrollView, // ✅ added
 } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
+import { useDispatch } from 'react-redux';
 import AuthScreenShell from './components/AuthScreenShell';
 import { authApi, setAuthToken } from '../services/api';
+import { setAuth } from '../store/slices/authSlice';
 
 const LoginScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
   const [credentials, setCredentials] = useState({
     email: 'alokm@gmail.com',
     password: 'qwerty',
@@ -51,8 +54,8 @@ const LoginScreen = ({ navigation }) => {
       
       if (response.data.token) {
         await setAuthToken(response.data.token);
+        dispatch(setAuth({ token: response.data.token }));
       }
-      navigation.navigate('Home');
       Alert.alert('Success', 'Login successful!');
     } catch (err) {
       console.error('Login error:', err);

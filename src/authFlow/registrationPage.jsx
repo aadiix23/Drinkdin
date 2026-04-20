@@ -13,10 +13,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
+import { useDispatch } from 'react-redux';
 import AuthScreenShell from './components/AuthScreenShell';
 import { authApi, setAuthToken } from '../services/api';
+import { setAuth } from '../store/slices/authSlice';
 
 const RegistrationPage = ({ navigation }) => {
+  const dispatch = useDispatch();
   const [form, setForm] = useState({
     fullname: '',
     username: '',
@@ -89,10 +92,10 @@ const RegistrationPage = ({ navigation }) => {
       // Success - navigate to Home (backend returns token directly)
       if (response.data.token) {
         await setAuthToken(response.data.token);
+        dispatch(setAuth({ token: response.data.token }));
       }
       
       Alert.alert('Success', 'Registration successful!');
-      navigation.navigate('Home');
     } catch (err) {
       console.error('Registration error:', err);
       const errorMessage =

@@ -51,11 +51,18 @@ export const postApi = {
 };
 
 export const followApi = {
+  getFollowSummary: () => api.get('/follow/summary'),
   toggleFollow: (userId) => api.post(`/follow/${userId}`),
 };
 
 export const leaderboardApi = {
   getLeaderboard: () => api.get('/leaderboard'),
+};
+
+export const commentsApi = {
+  getComments: (postId) => api.get(`/comments/${postId}`),
+  addComment: (postId, text) => api.post(`/comments/${postId}`, { text }),
+  deleteComment: (commentId) => api.delete(`/comments/${commentId}`),
 };
 
 export default api;

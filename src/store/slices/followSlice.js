@@ -5,14 +5,18 @@ const initialState = {
   connections: [],
   following: [],
   followers: [],
+  followingIds: [],
   isLoading: false,
   error: null,
 };
 
 export const fetchNetwork = createAsyncThunk('follow/fetchNetwork', async (_, { rejectWithValue }) => {
   try {
-    const response = await feedApi.getFeed();
-    const posts = response.data?.posts || [];
+    const [feedResponse, followSummaryResponse] = await Promise.all([
+      feedApi.getFeed(),
+      followApi.getFollowSummary(),
+    ]);
+    const posts = feedResponse.data?.posts || [];
 
     const uniqueConnections = posts.reduce((accumulator, post) => {
       const user = post?.user;
@@ -35,7 +39,12 @@ export const fetchNetwork = createAsyncThunk('follow/fetchNetwork', async (_, { 
       return accumulator;
     }, []);
 
-    return uniqueConnections;
+    return {
+      connections: uniqueConnections,
+      followers: followSummaryResponse.data?.followers || [],
+      following: followSummaryResponse.data?.following || [],
+      followingIds: followSummaryResponse.data?.followingIds || [],
+    };
   } catch (error) {
     return rejectWithValue(error.response?.data?.message || 'Failed to fetch network');
   }
@@ -61,6 +70,7 @@ const followSlice = createSlice({
       state.connections = [];
       state.following = [];
       state.followers = [];
+      state.followingIds = [];
     },
   },
   extraReducers: (builder) => {
@@ -71,7 +81,10 @@ const followSlice = createSlice({
       })
       .addCase(fetchNetwork.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.connections = action.payload;
+        state.connections = action.payload.connections;
+        state.followers = action.payload.followers;
+        state.following = action.payload.following;
+        state.followingIds = action.payload.followingIds;
       })
       .addCase(fetchNetwork.rejected, (state, action) => {
         state.isLoading = false;
@@ -84,11 +97,11 @@ const followSlice = createSlice({
       .addCase(toggleFollow.fulfilled, (state, action) => {
         state.isLoading = false;
         const { userId, isFollowing } = action.payload;
-        const index = state.following.findIndex((id) => id === userId);
+        const index = state.followingIds.findIndex((id) => id === userId);
         if (isFollowing && index === -1) {
-          state.following.push(userId);
+          state.followingIds.push(userId);
         } else if (!isFollowing && index !== -1) {
-          state.following.splice(index, 1);
+          state.followingIds.splice(index, 1);
         }
       })
       .addCase(toggleFollow.rejected, (state, action) => {
